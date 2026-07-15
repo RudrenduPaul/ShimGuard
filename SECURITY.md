@@ -8,16 +8,25 @@ for anything sensitive, use GitHub's private vulnerability reporting
 
 ## Known trust boundaries
 
-**`--patterns` files are trusted input, not sandboxed.** The `--patterns`
-flag accepts a JSON file mapping issue numbers to a `{path, pattern}` pair,
-where `pattern` is compiled directly as a JavaScript `RegExp` and tested
-against file content fetched from GitHub. ShimGuard does not sandbox or
-time-box this regex evaluation. If you run ShimGuard with a `--patterns`
-file you did not author yourself (e.g. one someone else shared with you),
-review the `pattern` values first: a maliciously crafted regex with
-catastrophic backtracking could hang the process. This does not affect the
-core `verify` check (tracker-vs-merge-status), which requires no
-`--patterns` file at all.
+**The `--patterns` code check matches against content from the repo you're
+auditing, which may not be trustworthy.** The `--patterns` flag accepts a
+JSON file mapping issue numbers to a `{path, pattern}` pair, where `pattern`
+is compiled as a JavaScript `RegExp` and tested against file content fetched
+live from the `<owner>/<repo>` you point ShimGuard at. The realistic risk
+here is not a malicious `--patterns` file someone hands you (though that's
+also worth reviewing before use): it's that a completely ordinary regex you
+write yourself, tested against adversarial content served by an untrusted
+target repo, can trigger catastrophic backtracking (ReDoS). A security audit
+covering ShimGuard's own codebase confirmed this with a working local
+reproduction: an everyday pattern like `(\w+\s*)+$` hung against a 36-byte
+adversarial string.
+
+**Mitigated as of v0.1.1:** the regex match now runs in a worker thread with
+a 2-second hard deadline (the worker is terminated if it doesn't finish in
+time, and the check reports `found: null` with a note instead of hanging),
+and file content over 1MB is skipped rather than matched. This does not
+affect the core `verify` check (tracker-vs-merge-status), which requires no
+`--patterns` file and no regex matching at all.
 
 **GitHub tokens are never logged or included in error output.** `--token`
 (or `$GITHUB_TOKEN`) is sent only as an `Authorization` header to
