@@ -25,7 +25,7 @@ describe("CLI", () => {
   it("prints the version", () => {
     const { stdout, status } = runCli(["--version"]);
     expect(status).toBe(0);
-    expect(stdout.trim()).toBe("0.1.1");
+    expect(stdout.trim()).toBe("0.1.2");
   });
 
   it("exits 2 with a clear error on an invalid repo slug", () => {
