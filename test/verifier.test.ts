@@ -96,6 +96,17 @@ describe("extractFixReference", () => {
   it("returns null when no fix reference is present", () => {
     expect(extractFixReference("Closing as stale.")).toBeNull();
   });
+
+  it("stays fast against adversarial content from an untrusted target repo (ReDoS guard)", () => {
+    // Issue body/comment text is fetched live from the repo being audited,
+    // which may be adversarial. A prior regex shape here allowed
+    // catastrophic backtracking on input like this.
+    const adversarial = "fixed " + " ".repeat(2_000_000) + "in by via pr ";
+    const start = Date.now();
+    const result = extractFixReference(adversarial);
+    expect(Date.now() - start).toBeLessThan(500);
+    expect(result).toBeNull();
+  });
 });
 
 describe("TrackerVerifier", () => {

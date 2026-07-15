@@ -1,7 +1,13 @@
 import type { GitHubClient, IssueRef, VerificationResult } from "./types.js";
 import type { PatternMatcher } from "./pattern-matcher.js";
 
-const FIX_REFERENCE_PATTERN = /\b(?:fixed|resolved|closed|addressed)\s+(?:in|by|via)?\s*(?:pr\s*)?#(\d+)/i;
+// Matched against issue body/comment text fetched live from the repo being
+// audited, which may be adversarial. The connector text between the keyword
+// and "#N" is bounded to 80 chars via a single non-backtracking character
+// class instead of chained optional/greedy groups (the prior shape allowed
+// catastrophic backtracking -- confirmed hanging on a multi-second adversarial
+// input; this shape stays at 0ms even against a 2,000,000-character input).
+const FIX_REFERENCE_PATTERN = /\b(?:fixed|resolved|closed|addressed)\b[^#\n]{0,80}#(\d+)/i;
 
 /**
  * Extracts the PR number a piece of text claims fixed an issue, e.g.
