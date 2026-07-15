@@ -1,6 +1,6 @@
 {
   "name": "shimguard-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Verify that a GitHub issue closed as \"fixed\" actually has a merged fix. Catches security issues marked fixed whose PR was never merged.",
   "keywords": [
     "security",
@@ -25,7 +25,7 @@
   "author": "Rudrendu Paul",
   "type": "module",
   "bin": {
-    "shimguard": "./dist/cli.js"
+    "shimguard": "dist/cli.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

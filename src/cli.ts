@@ -13,7 +13,7 @@ program
   .description(
     "Verify that GitHub issues closed as \"fixed\" actually have a merged fix. Catches security issues marked fixed whose PR was never merged.",
   )
-  .version("0.1.0");
+  .version("0.1.1");
 
 program
   .command("verify")
