@@ -32,13 +32,28 @@ mechanical, unambiguous check, not a heuristic or a guess.
 
 ## Install
 
+ShimGuard ships two independent, equally first-class packages -- pick
+whichever fits your toolchain, or install both. Neither is deprecated in
+favor of the other; both implement the same "closed issue cites Fixed in PR
+#N, is #N actually merged" check against the same GitHub REST API.
+
 ```bash
+# npm -- JavaScript/TypeScript CLI + library
 npm install -g shimguard-cli
 # or run it once with no install
 npx shimguard-cli verify <owner>/<repo> --issues <numbers>
+
+# PyPI -- Python CLI + library (genuine port, not a wrapper around the Node binary)
+pip install shimguard-cli
 ```
 
-Requires Node.js 18 or later (uses the built-in `fetch` API).
+The npm CLI requires Node.js 18 or later (uses the built-in `fetch` API).
+The Python package's CLI entry point is also `shimguard` (e.g. `shimguard
+verify sybil-solutions/codex-shim --issues 45,46`); see
+[`python/README.md`](./python/README.md) and
+[docs/getting-started.md](./docs/getting-started.md) for the Python-specific
+walkthrough, and [CHANGELOG.md](./CHANGELOG.md) for each distribution's
+version history.
 
 ## Quickstart
 
@@ -159,6 +174,18 @@ console.log(result.verdict); // "MISMATCH"
 (see `src/types.ts`, `src/pattern-matcher.ts`), both are interfaces, so a
 future local-config scanner or a different code host can plug in without
 changing the verifier itself.
+
+The Python package exposes the same shape:
+
+```python
+from shimguard import TrackerVerifier, RestGitHubClient, RegexPatternMatcher, IssueRef
+
+client = RestGitHubClient()  # or RestGitHubClient(token=os.environ["GITHUB_TOKEN"])
+verifier = TrackerVerifier(client, RegexPatternMatcher(client))
+
+result = verifier.verify(IssueRef(owner="sybil-solutions", repo="codex-shim", number=45))
+print(result.verdict)  # "MISMATCH"
+```
 
 ## How it compares
 
