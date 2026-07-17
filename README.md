@@ -95,9 +95,10 @@ If the PR is merged but the cited pattern is still present in the file at
 `HEAD`, ShimGuard still reports `MISMATCH`: a merged PR does not guarantee
 the specific vulnerable line was actually removed.
 
-**Trust boundary:** `pattern` is compiled as a JavaScript `RegExp`. Only
-point `--patterns` at files you wrote or reviewed yourself. See
-[SECURITY.md](./SECURITY.md).
+**Trust boundary:** `pattern` is compiled as a JavaScript `RegExp`, and
+`path` is validated to stay within the target repo (no `..` traversal to a
+different repo or API endpoint, as of 0.1.3). Only point `--patterns` at
+files you wrote or reviewed yourself. See [SECURITY.md](./SECURITY.md).
 
 ## CLI reference
 

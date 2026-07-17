@@ -83,6 +83,31 @@ def test_get_file_content_returns_none_on_404() -> None:
     assert client.get_file_content("o", "r", "missing.py") is None
 
 
+def test_get_file_content_rejects_dot_dot_path_traversal() -> None:
+    client = RestGitHubClient()
+    with pytest.raises(ValueError, match="must be a relative path"):
+        client.get_file_content("o", "r", "../../../other-owner/other-repo/contents/secret.txt")
+
+
+def test_get_file_content_rejects_bare_dot_segment() -> None:
+    client = RestGitHubClient()
+    with pytest.raises(ValueError, match="must be a relative path"):
+        client.get_file_content("o", "r", "src/./config.py")
+
+
+@responses.activate
+def test_get_file_content_allows_ordinary_nested_path() -> None:
+    encoded = base64.b64encode(b"x = 1\n").decode("ascii")
+    responses.add(
+        responses.GET,
+        "https://api.github.com/repos/o/r/contents/src/config.py",
+        json={"content": encoded, "encoding": "base64"},
+        status=200,
+    )
+    client = RestGitHubClient()
+    assert client.get_file_content("o", "r", "src/config.py") == "x = 1\n"
+
+
 @responses.activate
 def test_raises_not_found_for_404_issue() -> None:
     responses.add(

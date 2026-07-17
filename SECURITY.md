@@ -78,6 +78,19 @@ both Node's and Python's regex engines.
 
 Both CLIs also skip file content over 1MB rather than matching it.
 
+**3. The optional `--patterns` code check's `path` field (fixed in both CLIs,
+0.1.3).** The `path` half of a `--patterns` entry was interpolated into the
+Contents API URL without validation. A `path` containing `..` segments
+could redirect the request to a different repo or a non-repo API endpoint
+entirely (e.g. `/user`), sent with the operator's own token -- a
+confused-deputy path-traversal bug, not a host-level SSRF (requests still
+only ever reach `api.github.com`). Both CLIs now reject any `path`
+containing empty, `.`, or `..` segments before building the request, and
+percent-encode each segment. As with items 1-2, this affects the realistic
+case of running `--patterns` against a file supplied by (or copied from)
+the repo being audited, which is the tool's own documented workflow -- see
+the README's "Trust boundary" note.
+
 **If you're running an npm version before v0.1.2, upgrade.** Neither fix
 changes any command's public behavior for legitimate input; both only
 bound worst-case time against adversarial input. The Python package has
@@ -89,9 +102,12 @@ never shipped a version without these guards.
 never the token value. This holds in both CLIs.
 
 **Network requests are scoped to `api.github.com` only.** The `owner`/`repo`
-arguments become URL path segments, not host segments, so there is no
-SSRF surface from user-supplied repo slugs. All requests use a 15-second
-timeout to avoid hanging indefinitely, in both CLIs.
+arguments, and (as of 0.1.3) the `--patterns` `path` field, become
+validated, percent-encoded URL path segments, not host segments, so there
+is no SSRF surface to a different host from user-supplied input. Item 3
+above covers the narrower same-host confused-deputy path-traversal risk
+that predated 0.1.3. All requests use a 15-second timeout to avoid hanging
+indefinitely, in both CLIs.
 
 ## What is out of scope
 

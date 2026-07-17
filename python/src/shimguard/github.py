@@ -19,6 +19,20 @@ TIMEOUT_SECONDS = 15
 USER_AGENT = "shimguard-cli"
 
 
+def _encode_repo_path(raw_path: str) -> str:
+    """Encode a repo-relative file path for the Contents API, rejecting
+    "."/".." segments so a --patterns file supplied by (or copied from) the
+    repo being audited cannot redirect the request to a different repo or
+    API endpoint via path traversal."""
+    segments = raw_path.split("/")
+    if not segments or any(s == "" or s in (".", "..") for s in segments):
+        raise ValueError(
+            f'Invalid file path "{raw_path}": must be a relative path with no empty, '
+            '"." or ".." segments.'
+        )
+    return "/".join(quote(s, safe="") for s in segments)
+
+
 class GitHubApiError(Exception):
     def __init__(self, message: str, status: int, url: str) -> None:
         super().__init__(message)
@@ -67,7 +81,7 @@ class RestGitHubClient:
         return res.json()
 
     def get_issue(self, owner: str, repo: str, number: int) -> GitHubIssue:
-        data = self._request(f"/repos/{owner}/{repo}/issues/{number}")
+        data = self._request(f"/repos/{quote(owner, safe='')}/{quote(repo, safe='')}/issues/{number}")
         return GitHubIssue(
             number=data["number"],
             title=data["title"],
@@ -77,11 +91,13 @@ class RestGitHubClient:
         )
 
     def get_issue_comments(self, owner: str, repo: str, number: int) -> List[GitHubComment]:
-        data = self._request(f"/repos/{owner}/{repo}/issues/{number}/comments?per_page=100")
+        data = self._request(
+            f"/repos/{quote(owner, safe='')}/{quote(repo, safe='')}/issues/{number}/comments?per_page=100"
+        )
         return [GitHubComment(body=c["body"], created_at=c["created_at"]) for c in data]
 
     def get_pull_request(self, owner: str, repo: str, number: int) -> GitHubPullRequest:
-        data = self._request(f"/repos/{owner}/{repo}/pulls/{number}")
+        data = self._request(f"/repos/{quote(owner, safe='')}/{quote(repo, safe='')}/pulls/{number}")
         return GitHubPullRequest(
             number=data["number"],
             state=data["state"],
@@ -93,8 +109,12 @@ class RestGitHubClient:
     def get_file_content(
         self, owner: str, repo: str, path: str, ref: str = "HEAD"
     ) -> Optional[str]:
+        safe_path = _encode_repo_path(path)
         try:
-            data = self._request(f"/repos/{owner}/{repo}/contents/{path}?ref={quote(ref, safe='')}")
+            data = self._request(
+                f"/repos/{quote(owner, safe='')}/{quote(repo, safe='')}/contents/"
+                f"{safe_path}?ref={quote(ref, safe='')}"
+            )
         except GitHubApiError as err:
             if err.status == 404:
                 return None

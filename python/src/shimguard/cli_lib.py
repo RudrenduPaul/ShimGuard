@@ -8,6 +8,7 @@ independently of argparse.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import asdict
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -62,11 +63,22 @@ def summarize(results: List[VerificationResult]) -> Dict[str, int]:
     }
 
 
+_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
+
+
+def _sanitize_for_text(s: str) -> str:
+    """Strip control characters (ANSI escapes, terminal OSC sequences,
+    embedded newlines) from issue-tracker text -- comes from the (possibly
+    untrusted) audited repo -- before writing it into text output that may
+    be piped into a terminal or a CI summary."""
+    return _CONTROL_CHARS.sub("", s)
+
+
 def format_text(results: List[VerificationResult], repo_slug: str) -> str:
     lines = [f"ShimGuard v0.1 -- Tracker Verification: {repo_slug}", ""]
     for r in results:
         label = {"MISMATCH": "MISMATCH", "MATCH": "MATCH   "}.get(r.verdict, "UNKNOWN ")
-        lines.append(f'[{label}] Issue #{r.issue.number} "{r.issue.title}"')
+        lines.append(f'[{label}] Issue #{r.issue.number} "{_sanitize_for_text(r.issue.title)}"')
         lines.append(f"  {r.issue.html_url}")
         if r.cited_pull_request:
             merge_state = "merged" if r.cited_pull_request.merged else f"{r.cited_pull_request.state}, not merged"

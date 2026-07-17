@@ -11,10 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Python 0.1.0] - 2026-07-16
 
-Initial public release of the Python port, published to PyPI as
-`shimguard-cli` (`pip install shimguard-cli`). Complementary to, not a
-replacement for, the existing npm package -- both are first-class and
-maintained together. See `python/README.md` for Python-specific usage.
+Initial public release of the Python port, packaged for distribution on
+PyPI as `shimguard-cli`. Complementary to, not a replacement for, the
+existing npm package -- both are first-class and maintained together. See
+`python/README.md` for Python-specific usage, and this repo's own PyPI
+project page for current install instructions once published.
 
 ### Added
 
@@ -50,6 +51,24 @@ maintained together. See `python/README.md` for Python-specific usage.
   2 MISMATCH under the Python CLI, matching the npm CLI's documented output
   for the same repo and issues.
 
+## [0.1.3 / Python 0.1.1] - Security fix
+
+**Security:** fixed a path-traversal vulnerability in the optional
+`--patterns` code check (`RestGitHubClient.getFileContent` /
+`get_file_content`, both CLIs). The `path` field of a `--patterns` entry
+was interpolated into the GitHub Contents API URL without validation; a
+`path` containing `..` segments could redirect the request to an
+unintended repo or API endpoint (e.g. `/user`), sent with the operator's
+own token. Both CLIs now reject any `path` containing empty, `.`, or `..`
+segments before building the request, and percent-encode `owner`/`repo`/
+`path` individually. See [SECURITY.md](./SECURITY.md) for the full
+trust-boundary writeup.
+
+Also stripped control characters (ANSI escapes, embedded newlines) from
+issue titles before they're written into `--format text` output, since
+that text can come from an untrusted audited repo and may be piped into a
+terminal or CI summary.
+
 ## [0.1.2] - Security fix
 
 **Security:** fixed a ReDoS (Regular Expression Denial of Service) vulnerability in
@@ -68,7 +87,7 @@ Commit: `de2ae61`
 
 ## [0.1.1] - Security fix
 
-**Security:** two fixes from a CSO audit pass.
+**Security:** two fixes from an internal security review pass.
 
 - **High:** `RegexPatternMatcher.check()` compiled the operator-supplied
   `--patterns` regex and ran it unbounded against live content from the
