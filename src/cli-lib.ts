@@ -44,11 +44,20 @@ export function summarize(results: VerificationResult[]): { mismatch: number; ma
   };
 }
 
+// Issue titles come from the (possibly untrusted) audited repo. Strip
+// control characters (ANSI escapes, terminal OSC sequences, embedded
+// newlines) before writing them into text output that may be piped into a
+// terminal or a CI summary.
+function sanitizeForText(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[\x00-\x1f\x7f]/g, "");
+}
+
 export function formatText(results: VerificationResult[], repoSlug: string): string {
   const lines: string[] = [`ShimGuard v0.1 -- Tracker Verification: ${repoSlug}`, ""];
   for (const r of results) {
     const label = r.verdict === "MISMATCH" ? "MISMATCH" : r.verdict === "MATCH" ? "MATCH   " : "UNKNOWN ";
-    lines.push(`[${label}] Issue #${r.issue.number} "${r.issue.title}"`);
+    lines.push(`[${label}] Issue #${r.issue.number} "${sanitizeForText(r.issue.title)}"`);
     lines.push(`  ${r.issue.htmlUrl}`);
     if (r.citedPullRequest) {
       lines.push(

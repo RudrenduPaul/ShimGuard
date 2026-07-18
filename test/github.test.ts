@@ -136,4 +136,35 @@ describe("RestGitHubClient.getFileContent", () => {
     const result = await client.getFileContent("o", "r", "weird.bin");
     expect(result).toBeNull();
   });
+
+  it("rejects a path containing a '..' segment instead of requesting it", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const client = new RestGitHubClient();
+    await expect(
+      client.getFileContent("o", "r", "../../../other-owner/other-repo/contents/secret.txt"),
+    ).rejects.toThrow(/must be a relative path/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a path containing a bare '.' segment", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const client = new RestGitHubClient();
+    await expect(client.getFileContent("o", "r", "src/./config.py")).rejects.toThrow(/must be a relative path/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("still allows an ordinary nested path", async () => {
+    const content = "x = 1\n";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({ content: Buffer.from(content, "utf-8").toString("base64"), encoding: "base64" }),
+      ),
+    );
+    const client = new RestGitHubClient();
+    const result = await client.getFileContent("o", "r", "src/config.py");
+    expect(result).toBe(content);
+  });
 });

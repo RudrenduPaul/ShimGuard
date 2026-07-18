@@ -2,6 +2,22 @@ import type { GitHubClient, GitHubComment, GitHubIssue, GitHubPullRequest } from
 
 const API_BASE = "https://api.github.com";
 
+/**
+ * Encodes a repo-relative file path for use in a GitHub Contents API URL,
+ * rejecting ".."/"." segments so a `--patterns` file supplied by (or
+ * copied from) the repo being audited cannot redirect the request to a
+ * different repo or API endpoint via path traversal.
+ */
+function encodeRepoPath(rawPath: string): string {
+  const segments = rawPath.split("/");
+  if (segments.length === 0 || segments.some((s) => s.length === 0 || s === "." || s === "..")) {
+    throw new Error(
+      `Invalid file path "${rawPath}": must be a relative path with no empty, "." or ".." segments.`,
+    );
+  }
+  return segments.map((s) => encodeURIComponent(s)).join("/");
+}
+
 export class GitHubApiError extends Error {
   constructor(
     message: string,
@@ -55,7 +71,7 @@ export class RestGitHubClient implements GitHubClient {
       body: string | null;
       closed_at: string | null;
       pull_request?: unknown;
-    }>(`/repos/${ref.owner}/${ref.repo}/issues/${ref.number}`);
+    }>(`/repos/${encodeURIComponent(ref.owner)}/${encodeURIComponent(ref.repo)}/issues/${ref.number}`);
     return {
       number: data.number,
       title: data.title,
@@ -67,7 +83,7 @@ export class RestGitHubClient implements GitHubClient {
 
   async getIssueComments(ref: { owner: string; repo: string; number: number }): Promise<GitHubComment[]> {
     const data = await this.request<Array<{ body: string; created_at: string }>>(
-      `/repos/${ref.owner}/${ref.repo}/issues/${ref.number}/comments?per_page=100`,
+      `/repos/${encodeURIComponent(ref.owner)}/${encodeURIComponent(ref.repo)}/issues/${ref.number}/comments?per_page=100`,
     );
     return data.map((c) => ({ body: c.body, createdAt: c.created_at }));
   }
@@ -79,7 +95,7 @@ export class RestGitHubClient implements GitHubClient {
       merged: boolean;
       merged_at: string | null;
       html_url: string;
-    }>(`/repos/${owner}/${repo}/pulls/${number}`);
+    }>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}`);
     return {
       number: data.number,
       state: data.state,
@@ -90,9 +106,10 @@ export class RestGitHubClient implements GitHubClient {
   }
 
   async getFileContent(owner: string, repo: string, path: string, ref = "HEAD"): Promise<string | null> {
+    const safePath = encodeRepoPath(path);
     try {
       const data = await this.request<{ content: string; encoding: string }>(
-        `/repos/${owner}/${repo}/contents/${path}?ref=${encodeURIComponent(ref)}`,
+        `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${safePath}?ref=${encodeURIComponent(ref)}`,
       );
       if (data.encoding !== "base64") {
         return null;
