@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
+import { createRequire } from "node:module";
 
 const CLI = resolve(__dirname, "..", "dist", "cli.js");
+const require = createRequire(import.meta.url);
+const { version: packageVersion } = require("../package.json") as { version: string };
 
 function runCli(args: string[]): { stdout: string; status: number } {
   try {
@@ -22,10 +25,10 @@ describe("CLI", () => {
     expect(stdout).toMatch(/shimguard/);
   });
 
-  it("prints the version", () => {
+  it("prints the version matching package.json", () => {
     const { stdout, status } = runCli(["--version"]);
     expect(status).toBe(0);
-    expect(stdout.trim()).toBe("0.1.2");
+    expect(stdout.trim()).toBe(packageVersion);
   });
 
   it("exits 2 with a clear error on an invalid repo slug", () => {
