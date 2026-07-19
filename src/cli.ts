@@ -1,10 +1,14 @@
 #!/usr/bin/env node
+import { createRequire } from "node:module";
 import { Command } from "commander";
 import { TrackerVerifier } from "./verifier.js";
 import { RegexPatternMatcher } from "./pattern-matcher.js";
 import { RestGitHubClient, GitHubApiError } from "./github.js";
 import type { VerificationResult } from "./types.js";
 import { parseRepoSlug, parseIssueList, loadPatterns, formatText, formatJson } from "./cli-lib.js";
+
+const require = createRequire(import.meta.url);
+const { version: packageVersion } = require("../package.json") as { version: string };
 
 const program = new Command();
 
@@ -13,7 +17,7 @@ program
   .description(
     "Verify that GitHub issues closed as \"fixed\" actually have a merged fix. Catches security issues marked fixed whose PR was never merged.",
   )
-  .version("0.1.2");
+  .version(packageVersion);
 
 program
   .command("verify")
