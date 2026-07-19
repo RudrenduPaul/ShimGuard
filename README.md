@@ -55,6 +55,8 @@ verify sybil-solutions/codex-shim --issues 45,46`); see
 walkthrough, and [CHANGELOG.md](./CHANGELOG.md) for each distribution's
 version history.
 
+![Installing shimguard-cli from npm and running its first verify command against the real sybil-solutions/codex-shim repo, reporting 2 MISMATCH results](./docs/demo.gif)
+
 ## Quickstart
 
 ```bash
@@ -157,6 +159,8 @@ parse directly:
 }
 ```
 
+![Running shimguard verify with --format json against the real sybil-solutions/codex-shim repo, printing the structured JSON verdict for issue 45](./docs/usage.gif)
+
 ## Library API
 
 ShimGuard's verification logic is also importable directly:
@@ -257,6 +261,44 @@ was narrowed to the sharper, more defensible wedge: verifying tracker
 claims against actual merged code, which is what shipped in v0.1. The name
 reflects the project's origin case (`sybil-solutions/codex-shim`, a BYOK
 model shim), not a scope this version doesn't have.
+
+**Does ShimGuard work on Windows, macOS, and Linux?**
+The npm CLI requires Node.js 18 or later (for the built-in `fetch` API) and
+runs anywhere Node runs, including Windows, macOS, and Linux. The PyPI
+package requires Python 3.9 or later and lists itself as OS Independent in
+its own classifiers. Neither package has a native or compiled dependency.
+
+**How is ShimGuard different from gitleaks or trufflehog?**
+Gitleaks and trufflehog scan file content for secrets accidentally
+committed to a repo, things like API keys and tokens. ShimGuard does not
+scan file content for secrets at all -- it checks GitHub's issue and
+pull-request API for one specific mismatch: an issue closed as "fixed in
+PR #N" where PR #N never actually merged. The two tool categories catch
+different failure modes and can run in the same pipeline without
+overlapping; see "How it compares" above for the full list of adjacent
+tools this project checked before writing a line of code.
+
+**Why does `shimguard --version` print a different number than the
+installed package?**
+As of npm package `0.1.3`, running `shimguard --version` reports `0.1.2`
+-- the version string passed to `commander` in `src/cli.ts` was not
+bumped in the `0.1.3` security-fix release. It is a display-only mismatch
+and does not affect `verify` behavior. To check the actual installed
+version, read the package's own `package.json` or run `npm view
+shimguard-cli version`.
+
+**Does ShimGuard scan every closed issue in a repo automatically?**
+No. You pass the specific issue numbers to check with `--issues
+38,41,42`; ShimGuard does not currently walk a repo's full closed-issue
+history looking for cited-fix claims on its own. For a large repo, pick
+the issues you care about, for example the ones tagged `security` or tied
+to a release milestone.
+
+**Can I use ShimGuard in a commercial product or a paid CI pipeline?**
+Yes. ShimGuard is MIT licensed (see [LICENSE](./LICENSE)), which permits
+commercial use, modification, and redistribution, including inside a
+paid product or internal tool, with no royalty and no requirement to
+open-source your own code. Keeping the MIT notice is the only condition.
 
 ## Contributing
 
