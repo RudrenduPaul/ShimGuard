@@ -1,6 +1,6 @@
 {
   "name": "shimguard-cli",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Verify that a GitHub issue closed as \"fixed\" actually has a merged fix. Catches security issues marked fixed whose PR was never merged.",
   "keywords": [
     "security",
