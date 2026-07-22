@@ -256,11 +256,11 @@ for a bot or dashboard.
 
 **Why "ShimGuard" if it doesn't scan BYOK shim configs?**
 An earlier framing of this idea was a broader local-config security scanner
-for BYOK (bring-your-own-key) model shims. During design review, that scope
-was narrowed to the sharper, more defensible wedge: verifying tracker
-claims against actual merged code, which is what shipped in v0.1. The name
-reflects the project's origin case (`sybil-solutions/codex-shim`, a BYOK
-model shim), not a scope this version doesn't have.
+for BYOK (bring-your-own-key) model shims. That scope was narrowed to the
+sharper, more defensible wedge: verifying tracker claims against actual
+merged code, which is what shipped in v0.1. The name reflects the
+project's origin case (`sybil-solutions/codex-shim`, a BYOK model shim),
+not a scope this version doesn't have.
 
 **Does ShimGuard work on Windows, macOS, and Linux?**
 The npm CLI requires Node.js 18 or later (for the built-in `fetch` API) and

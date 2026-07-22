@@ -181,6 +181,25 @@ forever), different mechanism. See
 [SECURITY.md](https://github.com/RudrenduPaul/ShimGuard/blob/main/SECURITY.md)
 for the full threat model.
 
+## How it compares
+
+No existing open-source tool checks "this issue tracker says
+fixed-in-PR-#N, is #N actually merged." The closest adjacent tools solve
+different problems -- the full comparison, including why
+[wow-actions/auto-close-fixed-issues](https://github.com/wow-actions/auto-close-fixed-issues)
+makes this a real, observed failure mode rather than a theoretical one,
+lives in the
+[project README's "How it compares" section](https://github.com/RudrenduPaul/ShimGuard#how-it-compares).
+The short version:
+
+| Tool | What it actually checks | Reads issue tracker / PR merge state? |
+|---|---|---|
+| **ShimGuard** | Does a GitHub issue's cited "fixed in PR #N" claim match PR #N's real merge state (and, optionally, is the cited code pattern gone from `HEAD`) | Yes, this is the entire check |
+| [gitleaks](https://github.com/gitleaks/gitleaks) / [trufflehog](https://github.com/trufflesecurity/trufflehog) | Secrets committed to source (API keys, tokens) | No, scans file content, not tracker state |
+| [trivy](https://github.com/aquasecurity/trivy) / [grype](https://github.com/anchore/grype) / [osv-scanner](https://github.com/google/osv-scanner) | Known CVEs in your dependency tree | No, scans a dependency manifest/lockfile, not tracker state |
+| [Vanir](https://github.com/google/vanir) (Google) | Whether a known CVE's code signature is still present in a target source tree | No, works from CVE-to-code, doesn't touch a GitHub issue tracker |
+| [VFCFinder](https://github.com/s3c2/vfcfinder) (NC State, ASIACCS 2024) | Finds a likely fix commit for an advisory that has *no* linked fix yet | Opposite direction: finds a missing citation, doesn't verify an existing one |
+
 ## Testing
 
 ```bash
@@ -206,6 +225,38 @@ anything in the target repo. GitHub tokens are sent only as an
 [SECURITY.md](https://github.com/RudrenduPaul/ShimGuard/blob/main/SECURITY.md)
 for the full policy and the ReDoS-mitigation history this port carries
 forward from the npm package's v0.1.1/v0.1.2 security fixes.
+
+## FAQ
+
+**Does ShimGuard modify my repo or the target repo?**
+No. It only makes read-only GitHub API requests (issues, comments, pull
+requests, and optionally file contents). It never writes, comments, or
+mutates anything.
+
+**Does it need a GitHub token?**
+No for occasional use. Unauthenticated requests work, subject to GitHub's
+standard rate limit (60 requests/hour). Set `GITHUB_TOKEN` or pass
+`--token` for the higher authenticated limit (5,000 requests/hour),
+useful in CI.
+
+**What counts as a "cited fix"?**
+ShimGuard looks for phrases like "Fixed in PR #52", "fixed by #101", or
+"resolved in #20" in the issue body and its comments, and extracts the
+referenced PR number. If no such phrase is found, the result is
+`UNVERIFIED`, not `MATCH` or `MISMATCH`: ShimGuard never guesses.
+
+**Can I use this in CI?**
+Yes. `shimguard verify` exits `1` when any MISMATCH is found, so a CI
+step can gate on it directly. `--format json` gives a stable,
+parseable report for a bot or dashboard, with field names matching the
+npm CLI's JSON output exactly.
+
+**Is this Python package a wrapper around the npm CLI?**
+No. It's a genuine, independent reimplementation of the same detection
+logic (`src/verifier.ts`, `src/pattern-matcher.ts`), not a wrapper around
+the Node binary. The only place the implementations diverge by necessity
+is the `--patterns` regex timeout mechanism -- see "Fidelity to the npm
+package" above.
 
 ## Contributing
 
