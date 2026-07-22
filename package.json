@@ -22,6 +22,9 @@
   },
   "license": "MIT",
   "author": "Rudrendu Paul",
+  "contributors": [
+    "Sourav Nandy"
+  ],
   "type": "module",
   "bin": {
     "shimguard": "dist/cli.js"
