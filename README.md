@@ -5,6 +5,7 @@ Verify that a GitHub issue closed as "fixed" actually has a merged fix, before y
 [![CI](https://github.com/RudrenduPaul/ShimGuard/actions/workflows/ci.yml/badge.svg)](https://github.com/RudrenduPaul/ShimGuard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![npm](https://img.shields.io/npm/v/shimguard-cli)](https://www.npmjs.com/package/shimguard-cli)
+[![PyPI](https://img.shields.io/pypi/v/shimguard-cli)](https://pypi.org/project/shimguard-cli/)
 
 ```bash
 npx shimguard-cli verify sybil-solutions/codex-shim --issues 38,41,42,43,45,46
@@ -15,6 +16,19 @@ stars) turns up 6 MISMATCH results: 6 security issues, each closed with a
 "Fixed in PR #52" comment, where PR #52 was never actually merged. The
 vulnerable code is still in `main` today. Nobody reading the closed issues
 would know.
+
+## Contents
+
+- [Why this exists](#why-this-exists)
+- [Install](#install)
+- [Quickstart](#quickstart)
+- [CLI reference](#cli-reference)
+- [Library API](#library-api)
+- [How it compares](#how-it-compares)
+- [What is ShimGuard, and why does it exist](#what-is-shimguard-and-why-does-it-exist)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Why this exists
 
@@ -74,9 +88,14 @@ ShimGuard v0.1 -- Tracker Verification: sybil-solutions/codex-shim
 Summary: 6 MISMATCH, 0 MATCH, 0 UNVERIFIED (6 checked)
 ```
 
-Exit code is `1` when any MISMATCH is found (useful for gating CI), `0` when
-every checked issue's claimed fix actually merged, `2` on a usage or network
-error.
+Exit code is `0` when every checked issue's claimed fix actually merged, `1`
+when any MISMATCH is found (useful for gating CI), and `2` when an argument
+value is invalid (a malformed repo slug, a bad `--format` value) or a GitHub
+API/network call fails. One CLI-framework quirk worth knowing: the npm CLI
+exits `1`, not `2`, if you omit the required `--issues` flag entirely,
+while the Python CLI exits `2` for that same missing-flag case. It only
+affects that one usage error, not the normal MATCH/MISMATCH exit codes,
+which are identical on both CLIs. See the FAQ for the full comparison.
 
 ### Optional: verify the code, not just the merge status
 
@@ -97,10 +116,12 @@ If the PR is merged but the cited pattern is still present in the file at
 `HEAD`, ShimGuard still reports `MISMATCH`: a merged PR does not guarantee
 the specific vulnerable line was actually removed.
 
-**Trust boundary:** `pattern` is compiled as a JavaScript `RegExp`, and
-`path` is validated to stay within the target repo (no `..` traversal to a
-different repo or API endpoint, as of 0.1.3). Only point `--patterns` at
-files you wrote or reviewed yourself. See [SECURITY.md](./SECURITY.md).
+**Trust boundary:** `pattern` is compiled as a JavaScript `RegExp` (Python:
+a `re` pattern), and `path` is validated to stay within the target repo, no
+`..` traversal to a different repo or API endpoint, fixed in npm `0.1.3`
+and Python `0.1.1`; both published packages are past those versions today.
+Only point `--patterns` at files you wrote or reviewed yourself. See
+[SECURITY.md](./SECURITY.md).
 
 ## CLI reference
 
@@ -138,6 +159,12 @@ Options:
   --format <format>   output format: text or json (default: "text")
   -h, --help          display help for command
 ```
+
+The Python CLI's `shimguard verify --help` exposes the identical four
+flags (`--issues`, `--patterns`, `--token`, `--format`) with the same
+defaults and semantics, just formatted through Python's `argparse` instead
+of `commander`; both were run and compared flag-for-flag while drafting
+this README.
 
 `--format json` output is stable and designed for scripts and AI agents to
 parse directly:
@@ -192,6 +219,9 @@ result = verifier.verify(IssueRef(owner="sybil-solutions", repo="codex-shim", nu
 print(result.verdict)  # "MISMATCH"
 ```
 
+Both snippets above were run against the live `sybil-solutions/codex-shim`
+repo while drafting this README and returned `"MISMATCH"`, as shown.
+
 ## How it compares
 
 No existing open-source tool checks "this issue tracker says fixed-in-PR-#N,
@@ -219,11 +249,12 @@ nothing catches it after the fact.
 
 ## What is ShimGuard, and why does it exist
 
-ShimGuard is a CLI and npm library that checks whether a GitHub issue's
-claimed fix ("Fixed in PR #N") is actually true, by checking the real merge
-state of that PR (and, optionally, whether the vulnerable code pattern is
-still present at `HEAD`). It exists because closing an issue with a citation
-to an unmerged PR is a real, observed failure mode, not a hypothetical one:
+ShimGuard is a CLI and library, shipped as both an npm package and a PyPI
+package, that checks whether a GitHub issue's claimed fix ("Fixed in PR
+#N") is actually true, by checking the real merge state of that PR (and,
+optionally, whether the vulnerable code pattern is still present at
+`HEAD`). It exists because closing an issue with a citation to an unmerged
+PR is a real, observed failure mode, not a hypothetical one:
 `sybil-solutions/codex-shim`, a 1,000+-star project, has 6 security issues
 closed this way as of this writing, each citing the same unmerged PR #52.
 ShimGuard does not scan for secrets in source code (see `gitleaks`,
@@ -278,14 +309,26 @@ different failure modes and can run in the same pipeline without
 overlapping; see "How it compares" above for the full list of adjacent
 tools this project checked before writing a line of code.
 
-**Why does `shimguard --version` print a different number than the
-installed package?**
-As of npm package `0.1.3`, running `shimguard --version` reports `0.1.2`
--- the version string passed to `commander` in `src/cli.ts` was not
-bumped in the `0.1.3` security-fix release. It is a display-only mismatch
-and does not affect `verify` behavior. To check the actual installed
-version, read the package's own `package.json` or run `npm view
-shimguard-cli version`.
+**Do the npm and Python CLIs behave identically?**
+Almost. Both were run side by side against the real
+`sybil-solutions/codex-shim` repo while drafting this README: same
+flags, same defaults, byte-identical `--format json` output, and
+identical `0`/`1` exit codes for a clean run versus a MISMATCH. The one
+real difference found is a CLI-framework quirk, not a logic difference:
+if you omit the required `--issues` flag entirely, the npm CLI (built on
+`commander`) exits `1`, while the Python CLI (built on `argparse`) exits
+`2` for that same usage error. It does not affect normal `verify` runs.
+
+**Why does `shimguard --version` print the wrong number?**
+On the npm package, it no longer does: `shimguard --version` reads
+directly from the installed `package.json`, confirmed accurate on the
+current `shimguard-cli@0.1.6` release. The Python package still has this
+bug: `python/src/shimguard/cli.py` hardcodes `__version__ = "0.1.0"`,
+which was never bumped, so `shimguard --version` on the PyPI package
+always prints `0.1.0` regardless of the actual installed version
+(currently `0.1.2` on PyPI, confirmed with `pip show shimguard-cli`). To
+check the real installed Python version, run `pip show shimguard-cli`
+instead of `shimguard --version`.
 
 **Does ShimGuard scan every closed issue in a repo automatically?**
 No. You pass the specific issue numbers to check with `--issues
