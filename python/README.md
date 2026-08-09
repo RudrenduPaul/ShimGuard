@@ -224,7 +224,7 @@ anything in the target repo. GitHub tokens are sent only as an
 `Authorization` header to `api.github.com` and never logged. See
 [SECURITY.md](https://github.com/RudrenduPaul/ShimGuard/blob/main/SECURITY.md)
 for the full policy and the ReDoS-mitigation history this port carries
-forward from the npm package's v0.1.1/v0.1.2 security fixes.
+forward from the npm package's earlier security fixes.
 
 ## FAQ
 

@@ -5,6 +5,7 @@ Verify that a GitHub issue closed as "fixed" actually has a merged fix, before y
 [![CI](https://github.com/RudrenduPaul/ShimGuard/actions/workflows/ci.yml/badge.svg)](https://github.com/RudrenduPaul/ShimGuard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![npm](https://img.shields.io/npm/v/shimguard-cli)](https://www.npmjs.com/package/shimguard-cli)
+[![PyPI version](https://img.shields.io/pypi/v/shimguard-cli.svg)](https://pypi.org/project/shimguard-cli/)
 
 ```bash
 npx shimguard-cli verify sybil-solutions/codex-shim --issues 38,41,42,43,45,46
@@ -99,7 +100,7 @@ the specific vulnerable line was actually removed.
 
 **Trust boundary:** `pattern` is compiled as a JavaScript `RegExp`, and
 `path` is validated to stay within the target repo (no `..` traversal to a
-different repo or API endpoint, as of 0.1.3). Only point `--patterns` at
+different repo or API endpoint). Only point `--patterns` at
 files you wrote or reviewed yourself. See [SECURITY.md](./SECURITY.md).
 
 ## CLI reference
@@ -278,14 +279,15 @@ different failure modes and can run in the same pipeline without
 overlapping; see "How it compares" above for the full list of adjacent
 tools this project checked before writing a line of code.
 
-**Why does `shimguard --version` print a different number than the
+**Why might `shimguard --version` print a different number than the
 installed package?**
-As of npm package `0.1.3`, running `shimguard --version` reports `0.1.2`
--- the version string passed to `commander` in `src/cli.ts` was not
-bumped in the `0.1.3` security-fix release. It is a display-only mismatch
-and does not affect `verify` behavior. To check the actual installed
-version, read the package's own `package.json` or run `npm view
-shimguard-cli version`.
+In some past releases, running `shimguard --version` reported a version
+string that lagged behind the installed package's actual version --
+the version string passed to `commander` in `src/cli.ts` was not always
+bumped in the same release as a `package.json` version bump. It is a
+display-only mismatch and does not affect `verify` behavior. To check the
+actual installed version, read the package's own `package.json` or run
+`npm view shimguard-cli version`.
 
 **Does ShimGuard scan every closed issue in a repo automatically?**
 No. You pass the specific issue numbers to check with `--issues
