@@ -7,6 +7,8 @@ Verify that a GitHub issue closed as "fixed" actually has a merged fix, before y
 [![npm](https://img.shields.io/npm/v/shimguard-cli)](https://www.npmjs.com/package/shimguard-cli)
 [![PyPI version](https://img.shields.io/pypi/v/shimguard-cli.svg)](https://pypi.org/project/shimguard-cli/)
 
+![Installing shimguard-cli from npm and running its first verify command against the real sybil-solutions/codex-shim repo, reporting 2 MISMATCH results](./docs/demo.gif)
+
 ```bash
 npx shimguard-cli verify sybil-solutions/codex-shim --issues 38,41,42,43,45,46
 ```
@@ -55,8 +57,6 @@ verify sybil-solutions/codex-shim --issues 45,46`); see
 [docs/getting-started.md](./docs/getting-started.md) for the Python-specific
 walkthrough, and [CHANGELOG.md](./CHANGELOG.md) for each distribution's
 version history.
-
-![Installing shimguard-cli from npm and running its first verify command against the real sybil-solutions/codex-shim repo, reporting 2 MISMATCH results](./docs/demo.gif)
 
 ## Quickstart
 
