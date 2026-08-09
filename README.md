@@ -79,6 +79,12 @@ Exit code is `1` when any MISMATCH is found (useful for gating CI), `0` when
 every checked issue's claimed fix actually merged, `2` on a usage or network
 error.
 
+ShimGuard is not just a gotcha finder: run it against a mix of issues and it
+correctly reports MATCH, UNVERIFIED, and MISMATCH side by side, exiting `0`
+whenever nothing is provably broken -- exactly the signal a CI gate needs.
+
+![Running shimguard verify against a mix of issues in the real sybil-solutions/codex-shim repo: one MATCH (merged fix), one UNVERIFIED (no cited fix), exit code 0 since nothing is provably broken](./docs/demo-3-mixed-verdicts.gif)
+
 ### Optional: verify the code, not just the merge status
 
 For an even stronger check, point ShimGuard at the specific file and pattern
