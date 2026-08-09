@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from importlib import metadata as importlib_metadata
 
 import pytest
 
@@ -34,6 +35,18 @@ class TestCliSubprocess:
         result = _run(["--version"])
         assert result.returncode == 0
         assert result.stdout.strip() == f"shimguard-cli {__version__}"
+
+    def test_version_matches_installed_package_metadata(self) -> None:
+        """Regression: __version__ (and cli.py's separate copy of it) used
+        to be a hardcoded string that drifted from the actual installed/
+        published version, so `shimguard --version` silently reported a
+        stale number. __version__ is now read live from package metadata
+        via importlib.metadata, so this asserts --version output actually
+        reflects the real installed shimguard-cli version, not a second
+        hand-maintained constant that could drift independently again."""
+        result = _run(["--version"])
+        assert result.returncode == 0
+        assert importlib_metadata.version("shimguard-cli") in result.stdout
 
 
 class TestCliInProcess:

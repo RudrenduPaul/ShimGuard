@@ -9,6 +9,17 @@ distribution they apply to.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Python 0.1.4] - 2026-08-08
+
+Bug fix. Both `shimguard/__init__.py`'s `__version__` and `shimguard/cli.py`'s
+separate `__version__` constant were hardcoded to `"0.1.0"`, drifted from the
+real `pyproject.toml` version -- the installed/published package was 0.1.3,
+but `shimguard --version` still reported 0.1.0. `__version__` is now read
+live from the installed package's own metadata via
+`importlib.metadata.version("shimguard-cli")`, and `cli.py` imports that same
+value instead of keeping its own copy, matching how the npm CLI already
+derives its version from `package.json` at runtime.
+
 ## [Python 0.1.0] - 2026-07-16
 
 Initial public release of the Python port, packaged for distribution on
