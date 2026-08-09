@@ -1,11 +1,11 @@
 # ShimGuard
 
-Verify that a GitHub issue closed as "fixed" actually has a merged fix, before you trust the tracker.
-
 [![CI](https://github.com/RudrenduPaul/ShimGuard/actions/workflows/ci.yml/badge.svg)](https://github.com/RudrenduPaul/ShimGuard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![npm](https://img.shields.io/npm/v/shimguard-cli)](https://www.npmjs.com/package/shimguard-cli)
 [![PyPI version](https://img.shields.io/pypi/v/shimguard-cli.svg)](https://pypi.org/project/shimguard-cli/)
+
+Verify that a GitHub issue closed as "fixed" actually has a merged fix, before you trust the tracker.
 
 ![Installing shimguard-cli from npm and running its first verify command against the real sybil-solutions/codex-shim repo, reporting 2 MISMATCH results](./docs/demo.gif)
 
@@ -104,10 +104,11 @@ If the PR is merged but the cited pattern is still present in the file at
 `HEAD`, ShimGuard still reports `MISMATCH`: a merged PR does not guarantee
 the specific vulnerable line was actually removed.
 
-**Trust boundary:** `pattern` is compiled as a JavaScript `RegExp`, and
-`path` is validated to stay within the target repo (no `..` traversal to a
-different repo or API endpoint). Only point `--patterns` at
-files you wrote or reviewed yourself. See [SECURITY.md](./SECURITY.md).
+> [!WARNING]
+> `pattern` is compiled as a JavaScript `RegExp`, and `path` is validated to
+> stay within the target repo (no `..` traversal to a different repo or API
+> endpoint). Only point `--patterns` at files you wrote or reviewed
+> yourself. See [SECURITY.md](./SECURITY.md).
 
 ## CLI reference
 
