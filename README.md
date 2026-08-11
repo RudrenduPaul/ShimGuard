@@ -169,6 +169,42 @@ parse directly:
 
 ![Running shimguard verify with --format json against the real sybil-solutions/codex-shim repo, printing the structured JSON verdict for issue 45](./docs/usage.gif)
 
+## MCP Server
+
+ShimGuard ships a Model Context Protocol server, so an MCP-compatible agent
+(Claude Desktop, Claude Code, Cursor, or any other MCP client) can call it
+as a tool instead of shelling out to the CLI and parsing text. It's part of
+the Python distribution:
+
+```bash
+pip install "shimguard-cli[mcp]"
+```
+
+Register it with an MCP client such as Claude Desktop:
+
+```json
+{
+  "mcpServers": {
+    "shimguard": {
+      "command": "shimguard-mcp"
+    }
+  }
+}
+```
+
+It exposes a single tool, `run`, that takes the exact argv you'd pass to
+the `shimguard` CLI and returns a structured result (`{returncode, stdout,
+stderr, json?}` on success, `{error: ...}` if the command failed, timed
+out, or exited non-zero). Example call:
+
+```
+run(args=["verify", "sybil-solutions/codex-shim", "--issues", "45,46", "--format", "json"])
+```
+
+which returns the same `--format json` report shown above, as a parsed
+`json` field alongside the raw `stdout`. Full details are in the
+[Python package README](./python/README.md#mcp-server).
+
 ## Library API
 
 ShimGuard's verification logic is also importable directly:

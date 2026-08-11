@@ -9,6 +9,17 @@ distribution they apply to.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Python 0.1.5] - 2026-08-10
+
+Adds a Model Context Protocol server. `shimguard-mcp` (installed via the new
+`mcp` optional dependency group, `pip install "shimguard-cli[mcp]"`) starts
+a stdio MCP server exposing a single `run` tool that shells out to the
+installed `shimguard` CLI and returns a structured result -- so an
+MCP-compatible agent can call `shimguard verify` as a tool call instead of
+shelling out and parsing text itself. Uses `mcp.server.MCPServer` (the
+`mcp` package's current 2.0.0+ high-level server class); every tool-handler
+code path is caught so it returns `{"error": ...}` instead of raising.
+
 ## [Python 0.1.4] - 2026-08-08
 
 Bug fix. Both `shimguard/__init__.py`'s `__version__` and `shimguard/cli.py`'s

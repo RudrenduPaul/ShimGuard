@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "shimguard-cli"
-version = "0.1.4"
+version = "0.1.5"
 description = "Verify that a GitHub issue closed as \"fixed\" actually has a merged fix. Catches security issues marked fixed whose PR was never merged."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -40,6 +40,14 @@ dev = [
   "build>=1.0,<2",
   "twine>=5.0,<7",
 ]
+# The mcp package requires Python >=3.10, stricter than this project's own
+# >=3.9 floor, so it's kept optional rather than a base dependency.
+# Pinned to >=2.0.0: mcp_server.py uses `mcp.server.MCPServer`, the current
+# high-level server class -- `mcp.server.fastmcp.FastMCP` was removed in
+# the 2.0.0 release.
+mcp = [
+  "mcp[cli]>=2.0.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/RudrenduPaul/ShimGuard"
@@ -52,6 +60,10 @@ Documentation = "https://github.com/RudrenduPaul/ShimGuard/blob/main/docs/gettin
 
 [project.scripts]
 shimguard = "shimguard.cli:main"
+shimguard-mcp = "shimguard.mcp_server:main"
+
+[tool.hatch.build]
+exclude = [".venv*/"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/shimguard"]
