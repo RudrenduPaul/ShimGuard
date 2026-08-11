@@ -25,48 +25,48 @@ from mcp.server import MCPServer
 _CLI_BIN = shutil.which("shimguard") or "shimguard"
 _TIMEOUT_SECONDS = 120
 
-_FALLBACK_DESCRIPTION = (
-    "Run a shimguard CLI command. `args` is the exact argv you would pass "
-    'to the `shimguard` command line tool, e.g. ["verify", '
-    '"sybil-solutions/codex-shim", "--issues", "38,41,42", "--format", '
-    '"json"] to check whether closed issues 38, 41, and 42 actually have a '
-    "merged fix. Pass --format json for structured output. Returns "
-    "{returncode, stdout, stderr, json?} on success, or {error: ...} if the "
-    "command could not be run, timed out, or exited non-zero."
+_TOOL_DESCRIPTION = (
+    "Runs shimguard's 'verify' check against a public GitHub repo and returns whether each "
+    "issue the repo's tracker claims is 'fixed' actually has a merged pull request behind "
+    "it. Call this when you need to trust a tracker's closed-issue state before relying on "
+    "it -- e.g. before telling a user a security bug is patched, before citing an issue as "
+    "resolved in a report, or while triaging which of several 'closed' issues are still "
+    "live because their cited fix PR never merged. Do not call it for open issues (there is "
+    "nothing to verify yet) or for repos you don't have read access to.\n\n"
+    "Prerequisites: the `shimguard` binary must be on PATH (bundled with this package); no "
+    "auth is required for public repos at GitHub's unauthenticated rate limit, but for "
+    "private repos or to avoid rate-limiting on repeated calls, set $GITHUB_TOKEN or pass "
+    "'--token <token>'.\n\n"
+    "This tool is strictly read-only: it makes outbound HTTPS calls to the GitHub REST API "
+    "(one per issue, plus one per cited pull request) and writes nothing anywhere, locally "
+    "or on GitHub. Results are not cached and can change between calls if the repo's issue "
+    "or PR state changes, so it is safe and meaningful to re-run. The underlying CLI exits "
+    "0 when every checked issue's claimed fix actually merged, 1 when any MISMATCH is "
+    "found, and 2 on a usage or network error -- this wrapper never raises regardless: a "
+    "missing binary, launch failure, timeout, or non-zero exit is always returned as "
+    "{\"error\": ...} alongside the raw returncode/stdout/stderr, never an exception.\n\n"
+    "Parameter `args` is the literal argv you would type after `shimguard` on the command "
+    "line, as a list of strings. Real examples: run(args=[\"verify\", "
+    "\"sybil-solutions/codex-shim\", \"--issues\", \"38,41,42\", \"--format\", \"json\"]) to "
+    "check three specific closed issues; run(args=[\"verify\", \"owner/repo\", \"--format\", "
+    "\"json\"]) to check every closed issue in the repo; run(args=[\"verify\", "
+    "\"owner/repo\", \"--issues\", \"45,46\", \"--patterns\", \"./patterns.json\", "
+    "\"--format\", \"json\"]) to additionally confirm the fix pattern actually appears in "
+    "the merged code, using a JSON file mapping issue number to {path, pattern}. Always "
+    "include '--format json' -- without it the CLI prints human-readable text instead of a "
+    "parseable object.\n\n"
+    "Returns {\"returncode\", \"stdout\", \"stderr\"} plus a parsed \"json\" key when stdout "
+    "was valid JSON (only when '--format json' was passed). That JSON has the shape "
+    "{\"repo\", \"checked\", \"summary\": {\"mismatch\", \"match\", \"unverified\"}, "
+    "\"results\": [{\"issue\": {...}, \"citedPullRequest\": {...}, \"patternCheck\", "
+    "\"verdict\", \"reason\"}]}. Pass run(args=[\"--help\"]) or run(args=[\"verify\", "
+    "\"--help\"]) for the CLI's own current usage text."
 )
-
-
-def _build_description() -> str:
-    """Builds the `run` tool description from the CLI's real `--help`
-    output at import time, so the tool description stays accurate as
-    subcommands are added. Falls back to a static description if the
-    subprocess call fails for any reason (binary missing, not executable,
-    non-zero exit, timeout)."""
-    try:
-        proc = subprocess.run(
-            [_CLI_BIN, "--help"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        help_text = (proc.stdout or proc.stderr or "").strip()
-        if not help_text:
-            return _FALLBACK_DESCRIPTION
-        return (
-            "Run a shimguard CLI command. `args` is the exact argv you "
-            "would pass to the `shimguard` command line tool "
-            '(e.g. ["verify", "owner/repo", "--issues", "38,41", '
-            '"--format", "json"]).\n\n'
-            f"Real `shimguard --help` output:\n{help_text}"
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return _FALLBACK_DESCRIPTION
-
 
 mcp = MCPServer("shimguard")
 
 
-@mcp.tool(description=_build_description())
+@mcp.tool(description=_TOOL_DESCRIPTION)
 def run(args: list[str]) -> dict[str, Any]:
     try:
         proc = subprocess.run(
