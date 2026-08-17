@@ -1,3 +1,5 @@
+<!-- mcp-name: io.github.RudrenduPaul/shimguard -->
+
 # shimguard-cli (Python)
 
 Verify that a GitHub issue closed as "fixed" actually has a merged fix,
@@ -166,6 +168,40 @@ parse directly (field names match the npm CLI's JSON output exactly):
 }
 ```
 
+## MCP Server
+
+ShimGuard ships a Model Context Protocol server, so an MCP-compatible agent
+(Claude Desktop, Claude Code, Cursor, or any other MCP client) can call it
+as a tool instead of shelling out to the CLI and parsing text.
+
+```bash
+pip install "shimguard-cli[mcp]"
+```
+
+Register it with an MCP client such as Claude Desktop:
+
+```json
+{
+  "mcpServers": {
+    "shimguard": {
+      "command": "shimguard-mcp"
+    }
+  }
+}
+```
+
+It exposes a single tool, `run`, that takes the exact argv you'd pass to
+the `shimguard` CLI and returns a structured result (`{returncode, stdout,
+stderr, json?}` on success, `{error: ...}` if the command failed, timed
+out, or exited non-zero). Example call:
+
+```
+run(args=["verify", "sybil-solutions/codex-shim", "--issues", "45,46", "--format", "json"])
+```
+
+which returns the same `--format json` report shown above, as a parsed
+`json` field alongside the raw `stdout`.
+
 ## Fidelity to the npm package
 
 This is a genuine Python reimplementation of the same detection logic in
@@ -224,7 +260,7 @@ anything in the target repo. GitHub tokens are sent only as an
 `Authorization` header to `api.github.com` and never logged. See
 [SECURITY.md](https://github.com/RudrenduPaul/ShimGuard/blob/main/SECURITY.md)
 for the full policy and the ReDoS-mitigation history this port carries
-forward from the npm package's v0.1.1/v0.1.2 security fixes.
+forward from the npm package's earlier security fixes.
 
 ## FAQ
 

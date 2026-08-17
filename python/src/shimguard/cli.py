@@ -17,13 +17,12 @@ import os
 import sys
 from typing import List
 
+from . import __version__
 from .cli_lib import format_json, format_text, load_patterns, parse_issue_list, parse_repo_slug
 from .github import GitHubApiError, RestGitHubClient
 from .pattern_matcher import RegexPatternMatcher
 from .types import IssueRef, VerificationResult
 from .verifier import TrackerVerifier
-
-__version__ = "0.1.0"
 
 
 def build_parser() -> argparse.ArgumentParser:
