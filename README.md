@@ -19,6 +19,19 @@ stars) turns up 6 MISMATCH results: 6 security issues, each closed with a
 vulnerable code is still in `main` today. Nobody reading the closed issues
 would know.
 
+## Contents
+
+- [Why this exists](#why-this-exists)
+- [Install](#install)
+- [Quickstart](#quickstart)
+- [CLI reference](#cli-reference)
+- [Library API](#library-api)
+- [How it compares](#how-it-compares)
+- [What is ShimGuard, and why does it exist](#what-is-shimguard-and-why-does-it-exist)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Why this exists
 
 Reading an issue tracker, you trust two signals: the issue's `state` (open
@@ -263,11 +276,12 @@ nothing catches it after the fact.
 
 ## What is ShimGuard, and why does it exist
 
-ShimGuard is a CLI and npm library that checks whether a GitHub issue's
-claimed fix ("Fixed in PR #N") is actually true, by checking the real merge
-state of that PR (and, optionally, whether the vulnerable code pattern is
-still present at `HEAD`). It exists because closing an issue with a citation
-to an unmerged PR is a real, observed failure mode, not a hypothetical one:
+ShimGuard is a CLI and library, shipped as both an npm package and a PyPI
+package, that checks whether a GitHub issue's claimed fix ("Fixed in PR
+#N") is actually true, by checking the real merge state of that PR (and,
+optionally, whether the vulnerable code pattern is still present at
+`HEAD`). It exists because closing an issue with a citation to an unmerged
+PR is a real, observed failure mode, not a hypothetical one:
 `sybil-solutions/codex-shim`, a 1,000+-star project, has 6 security issues
 closed this way as of this writing, each citing the same unmerged PR #52.
 ShimGuard does not scan for secrets in source code (see `gitleaks`,

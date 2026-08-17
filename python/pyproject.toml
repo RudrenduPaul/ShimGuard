@@ -13,7 +13,7 @@ authors = [
   { name = "Rudrendu Paul" },
   { name = "Sourav Nandy" },
 ]
-keywords = ["security", "cli", "github", "issue-tracker", "verification", "supply-chain", "vulnerability-scanner", "agent-native"]
+keywords = ["security", "cli", "github", "issue-tracker", "verification", "supply-chain", "vulnerability-scanner", "agent-native", "devsecops", "pull-request"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",

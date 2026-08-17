@@ -1,7 +1,7 @@
 {
   "name": "shimguard-cli",
-  "version": "0.1.6",
-  "description": "Verify that a GitHub issue closed as \"fixed\" actually has a merged fix. Catches security issues marked fixed whose PR was never merged.",
+  "version": "0.1.7",
+  "description": "Verify that a GitHub issue closed as \"fixed\" actually has a merged fix. Catches security issues and bugs marked fixed whose PR was never merged, with structured JSON output for CI and AI agents.",
   "keywords": [
     "security",
     "cli",
@@ -10,7 +10,9 @@
     "verification",
     "supply-chain",
     "vulnerability-scanner",
-    "agent-native"
+    "agent-native",
+    "devsecops",
+    "pull-request"
   ],
   "homepage": "https://github.com/RudrenduPaul/ShimGuard#readme",
   "bugs": {
