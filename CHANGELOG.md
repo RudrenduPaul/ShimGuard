@@ -9,6 +9,18 @@ distribution they apply to.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0 npm, 0.1.7 Python] - 2026-09-24
+
+### Changed
+
+- **Dependency upgrades**: npm `commander` ^12.1.0 to ^13.1.0. Python
+  `requests` floor raised from 2.31 to 2.32.5. Dev tooling moved to
+  TypeScript 6 and `@typescript-eslint` 8. The Node floor (18+) and Python
+  floor (3.9+) are unchanged.
+- **Publishing**: npm releases now publish through npm Trusted Publishing
+  (GitHub Actions OIDC) from `.github/workflows/publish-npm.yml`. No
+  long-lived npm token is used.
+
 ## [Python 0.1.5] - 2026-08-10
 
 Adds a Model Context Protocol server. `shimguard-mcp` (installed via the new
